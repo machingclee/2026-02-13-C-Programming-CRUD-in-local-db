@@ -13,19 +13,25 @@ void print_usage(char* argv[]) {
     printf("Usage: %s [-n] -f filename\n", argv[0]);
     printf("  -n            Create a new file\n");
     printf("  -f filename   (required) Specify the file path\n");
+    printf("  -a addstring  Add data in name,address,hours format\n");
+    printf("  -d            Delete the employee by name\n");
+    printf("  -l            List the employees\n");
     return;
 }
 
 int main(int argc, char* argv[]) {
-    char* filepath  = NULL;
-    char* addstring = NULL;
-    bool newfile    = false;
+    char* filepath             = NULL;
+    char* addstring            = NULL;
+    char* delete_employee_name = NULL;
+    bool newfile               = false;
+    bool list                  = false;
+    bool delete                = false;
     int c;
     int db_fd                    = -1;
     struct db_header_t* header   = NULL;
     struct employee_t* employees = NULL;
 
-    while ((c = getopt(argc, argv, "nf:a:")) != -1) {
+    while ((c = getopt(argc, argv, "nf:a:d:l")) != -1) {
         switch (c) {
         case 'n':
             newfile = true;
@@ -35,6 +41,13 @@ int main(int argc, char* argv[]) {
             break;
         case 'f':
             filepath = optarg;
+            break;
+        case 'l':
+            list = true;
+            break;
+        case 'd':
+            delete               = true;
+            delete_employee_name = optarg;
             break;
         default:
             fprintf(stderr, "Usage: %s [-n] -f filename\n", argv[0]);
@@ -61,7 +74,7 @@ int main(int argc, char* argv[]) {
             printf("Unable to open database file\n");
             return STATUS_ERROR;
         }
-        int status = validate_db_header(db_fd, &header);
+        int status = retrieve_and_validate_db_header(db_fd, &header);
         if (status == STATUS_ERROR) {
             printf("Invalid database file\n");
             return STATUS_ERROR;
@@ -77,12 +90,18 @@ int main(int argc, char* argv[]) {
     };
 
     if (addstring) {
-        int newCount  = header->count + 1;
-        header->count = newCount;
-
-        employees = realloc(employees, newCount * sizeof(struct employee_t));
-        add_employee(header, employees, addstring);
+        add_employee(header, &employees, addstring);
     }
+
+    if (list) {
+        list_employees(header, employees);
+    }
+
+    if (delete) {
+        delete_employee(header, &employees, delete_employee_name);
+    }
+
+    printf("Latest count: %d\n", header->count);
 
     output_file(db_fd, header, employees);
 

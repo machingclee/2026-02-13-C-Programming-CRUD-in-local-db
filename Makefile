@@ -6,8 +6,10 @@ run: clean default
 
 default: $(TARGET)
 	./$(TARGET) -f ./my_new_db.db -n
-	./$(TARGET) -f ./my_new_db.db -a  "James Lee,Hong Kong,30"
-
+	./$(TARGET) -f ./my_new_db.db -a  "James Lee,Hong Kong1,30"
+	./$(TARGET) -f ./my_new_db.db -a  "James Bon,Hong Kong2,30"
+	./$(TARGET) -f ./my_new_db.db -a  "Enoch Kung1,Hong Kong3,30"
+	./$(TARGET) -f ./my_new_db.db -a  "Enoch Kung2,Hong Kong4,30"
 clean:
 	rm -f obj/*.o
 	rm -f bin/*
