@@ -200,9 +200,19 @@ int delete_employee(struct db_header_t* header, struct employee_t** employees, c
         for (; i < old_count; i++) {
             if (i != delete_index) {
                 struct employee_t* remained_employee = *employees + i;
-                strncpy(new_employees[new_e_cursor].name, remained_employee->name, sizeof(remained_employee->name) - 1);
-                strncpy(new_employees[new_e_cursor].address, remained_employee->address, sizeof(remained_employee->address) - 1);
-                new_employees[new_e_cursor].hours = remained_employee->hours;
+                struct employee_t* new_employee      = new_employees + new_e_cursor;
+
+                strncpy(
+                    new_employee->name,
+                    remained_employee->name,
+                    sizeof(remained_employee->name) - 1);
+
+                strncpy(
+                    new_employee->address,
+                    remained_employee->address,
+                    sizeof(remained_employee->address) - 1);
+
+                new_employee->hours = remained_employee->hours;
 
                 new_e_cursor++;
             }
