@@ -1,12 +1,17 @@
-TARGET = bin/final
+TARGET = bin/dbview
 SRC = $(wildcard src/*.c)
 OBJ = $(patsubst src/%.c, obj/%.o, $(SRC))
 
+run: clean default
+
 default: $(TARGET)
+	./$(TARGET) -f ./my_new_db.db -n
+	./$(TARGET) -f ./my_new_db.db -a  "James Lee,Hong Kong,30"
 
 clean:
 	rm -f obj/*.o
 	rm -f bin/*
+	rm -f *.db
 
 $(TARGET): $(OBJ)
 	gcc -o $@ $?

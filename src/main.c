@@ -1,33 +1,90 @@
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdbool.h>
+#include <getopt.h>
 
-#include <sys/types.h>
-#include <string.h>
-#include <unistd.h>
 #include "file.h"
 #include "parse.h"
+#include "main.h"
+#include "common.h"
+#include <stdlib.h>
 
-// use gcc -o main main.c
-// to compile it
+void print_usage(char* argv[]) {
+    printf("Usage: %s [-n] -f filename\n", argv[0]);
+    printf("  -n            Create a new file\n");
+    printf("  -f filename   (required) Specify the file path\n");
+    return;
+}
 
 int main(int argc, char* argv[]) {
+    char* filepath  = NULL;
+    char* addstring = NULL;
+    bool newfile    = false;
+    int c;
+    int db_fd                    = -1;
+    struct db_header_t* header   = NULL;
+    struct employee_t* employees = NULL;
 
-    if (argc != 2) {
-        printf("Usage: %s <filename>\n", argv[0]);
+    while ((c = getopt(argc, argv, "nf:a:")) != -1) {
+        switch (c) {
+        case 'n':
+            newfile = true;
+            break;
+        case 'a':
+            addstring = optarg;
+            break;
+        case 'f':
+            filepath = optarg;
+            break;
+        default:
+            fprintf(stderr, "Usage: %s [-n] -f filename\n", argv[0]);
+            return 1;
+        }
+    }
+
+    if (filepath == NULL) {
+        printf("Filepath is a required argument.\n");
+        print_usage(argv);
         return 0;
     }
 
-    char* filename = argv[1];
-
-    int fd = open_rw_file(filename);
-
-    if (fd == -1) {
-        return -1;
+    if (newfile) {
+        db_fd = create_db_file(filepath);
+        if (db_fd == STATUS_ERROR) {
+            printf("Unable to create database file\n");
+            return STATUS_ERROR;
+        }
+        create_db_header(db_fd, &header);
+    } else {
+        db_fd = open_db_file(filepath);
+        if (db_fd == STATUS_ERROR) {
+            printf("Unable to open database file\n");
+            return STATUS_ERROR;
+        }
+        int status = validate_db_header(db_fd, &header);
+        if (status == STATUS_ERROR) {
+            printf("Invalid database file\n");
+            return STATUS_ERROR;
+        }
     }
-    if (parse_file_header(fd) == -1) {
-        return -1;
+
+    printf("Newfile: %d\n", newfile);
+    printf("Filepath: %s\n", filepath);
+
+    if (read_employees(db_fd, header, &employees) != STATUS_SUCCESS) {
+        printf("Failed to read employees");
+        return 0;
+    };
+
+    if (addstring) {
+        int newCount  = header->count + 1;
+        header->count = newCount;
+
+        employees = realloc(employees, newCount * sizeof(struct employee_t));
+        add_employee(header, employees, addstring);
     }
-    
-    close(fd);
-    return 0;
+
+    output_file(db_fd, header, employees);
+
+    return STATUS_SUCCESS;
 }
