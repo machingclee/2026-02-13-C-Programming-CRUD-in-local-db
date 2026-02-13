@@ -193,22 +193,22 @@ int delete_employee(struct db_header_t* header, struct employee_t** employees, c
         int old_count = header->count;
         int new_count = header->count - 1;
 
-        struct employee_t* updated_employees = calloc(new_count, sizeof(struct employee_t));
+        struct employee_t* new_employees = calloc(new_count, sizeof(struct employee_t));
 
         int i            = 0;
         int new_e_cursor = 0;
         for (; i < old_count; i++) {
             if (i != delete_index) {
                 struct employee_t* remained_employee = *employees + i;
-                strncpy(updated_employees[new_e_cursor].name, remained_employee->name, sizeof(remained_employee->name) - 1);
-                strncpy(updated_employees[new_e_cursor].address, remained_employee->address, sizeof(remained_employee->address) - 1);
-                updated_employees[new_e_cursor].hours = remained_employee->hours;
+                strncpy(new_employees[new_e_cursor].name, remained_employee->name, sizeof(remained_employee->name) - 1);
+                strncpy(new_employees[new_e_cursor].address, remained_employee->address, sizeof(remained_employee->address) - 1);
+                new_employees[new_e_cursor].hours = remained_employee->hours;
 
                 new_e_cursor++;
             }
         }
 
         header->count--;
-        *employees = updated_employees;
+        *employees = new_employees;
     }
 }
